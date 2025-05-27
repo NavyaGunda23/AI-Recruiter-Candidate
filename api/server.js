@@ -1,4 +1,8 @@
 const express = require('express');
+
+const http = require('http');
+const WebSocket = require('ws');
+
 const axios = require('axios');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
@@ -6,6 +10,9 @@ const multer = require('multer');
 require('dotenv').config();
 
 const app = express();
+
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
 
 // Configure multer for file upload
 const upload = multer({
@@ -55,6 +62,10 @@ app.use('/api/upload-to-created-folder', (req, res, next) => {
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+let latestRecords = new Map(); // ✅ Initialize this
+
+let lastDataMap = new Map(); // ✅ Initialize this
 
 // 🔐 Microsoft credentials from environment variables
 const config = {
@@ -128,7 +139,86 @@ function validateFolderName(folderName) {
   return true;
 }
 
-// 📁 Create folder route
+
+let clients = [];
+
+
+wss.on('connection', async(ws) => {
+
+  try {
+    const response = await axios.get('https://api.airtable.com/v0/app6R5bTSGcKo2gmV/tblon8HRet4lsDOUe', {
+      headers: {
+        Authorization: `Bearer pat3fMqN9X4eRWFmd.b31cffaf020d8e4666de0f657adc110e17127c9c38b093cf69d0996fe8e8dfcc`,
+        // Cookie: "brw=brwiMeamMoDgk2PG7; brwConsent=opt-in; AWSALBTG=6eNqOtl90/Hx3Rtqf+hKPZAjhL4G1y7el1V6H0DcIrCDoXON1Zgo+sTBoxAk0nTKQqrWsPbBoicfljEl2ufTJHsVWqgCBxTqjwKAmiMbCOSD5BOq43jRytIwD91E4WvCZiM7ZalTLVCuUoB/MbbbqKHiOyQe1n5PuJtiF0kho7sTp17qCio=; AWSALBTGCORS=6eNqOtl90/Hx3Rtqf+hKPZAjhL4G1y7el1V6H0DcIrCDoXON1Zgo+sTBoxAk0nTKQqrWsPbBoicfljEl2ufTJHsVWqgCBxTqjwKAmiMbCOSD5BOq43jRytIwD91E4WvCZiM7ZalTLVCuUoB/MbbbqKHiOyQe1n5PuJtiF0kho7sTp17qCio=",
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const allRecords = response.data.records;
+    ws.send(JSON.stringify({ type: 'INIT', records: allRecords }));
+
+  } catch (error) {
+    console.error('❌ Error sending initial Airtable data:', error);
+  }
+
+});
+
+async function fetchAirtableData() {
+  try {
+    const response = await axios.get(
+      `https://api.airtable.com/v0/app6R5bTSGcKo2gmV/tblon8HRet4lsDOUe`,
+      {
+        headers: {
+          Authorization: `Bearer pat3fMqN9X4eRWFmd.b31cffaf020d8e4666de0f657adc110e17127c9c38b093cf69d0996fe8e8dfcc`,
+          // Cookie: "brw=brwiMeamMoDgk2PG7; brwConsent=opt-in; AWSALBTG=6eNqOtl90/Hx3Rtqf+hKPZAjhL4G1y7el1V6H0DcIrCDoXON1Zgo+sTBoxAk0nTKQqrWsPbBoicfljEl2ufTJHsVWqgCBxTqjwKAmiMbCOSD5BOq43jRytIwD91E4WvCZiM7ZalTLVCuUoB/MbbbqKHiOyQe1n5PuJtiF0kho7sTp17qCio=; AWSALBTGCORS=6eNqOtl90/Hx3Rtqf+hKPZAjhL4G1y7el1V6H0DcIrCDoXON1Zgo+sTBoxAk0nTKQqrWsPbBoicfljEl2ufTJHsVWqgCBxTqjwKAmiMbCOSD5BOq43jRytIwD91E4WvCZiM7ZalTLVCuUoB/MbbbqKHiOyQe1n5PuJtiF0kho7sTp17qCio=",
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    const records = response.data.records;
+    latestRecords = records; // Update stored records for new clients
+
+    const changedRecords = [];
+
+    records.forEach((record) => {
+      const prev = lastDataMap.get(record.id);
+      if (!prev || JSON.stringify(prev.fields) !== JSON.stringify(record.fields)) {
+        changedRecords.push(record);
+        lastDataMap.set(record.id, record);
+      }
+    });
+
+    if (changedRecords.length > 0) {
+      const payload = {
+        type: 'update',
+        changed: changedRecords,
+        all: records,
+      };
+
+      broadcast(payload);
+    }
+  } catch (error) {
+    console.error('❌ Error fetching Airtable data:', error.message);
+  }
+}
+
+// Broadcast to all connected clients
+function broadcast(payload) {
+  const message = JSON.stringify(payload);
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(message);
+    }
+  });
+}
+
+
+setInterval(fetchAirtableData, 50000);
+
+
+
+
 app.post('/api/create-folder', async (req, res) => {
   console.log('Create folder request received:', req.body);
   
@@ -320,23 +410,6 @@ app.get('/api/list-files', async (req, res) => {
     }
   });
 
-  
-
-// Webhook to listen to n8n
-let latestN8nData = null;
-
-app.post('/webhook/n8n', (req, res) => {
-  console.log('Received from n8n:', req.body);
-  latestN8nData = req.body; // Store temporarily
-  res.status(200).json({ message: 'Received by frontend server' });
-});
-
-// Endpoint for frontend to poll the latest response
-app.get('/api/n8n-data', (req, res) => {
-  res.json({ data: latestN8nData });
-});
-
-
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -365,6 +438,10 @@ app.use('*', (req, res) => {
 });
 
 const PORT = process.env.PORT || 5001;
+
+server.listen(5174, () => {
+  console.log('WebSocket server running on ws://localhost:5172');
+});
 
 app.listen(PORT, () => {
   console.log(`✅ Backend running on http://localhost:${PORT}`);
