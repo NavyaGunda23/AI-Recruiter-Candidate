@@ -52,13 +52,35 @@ app.use(cors({
 app.options('*', cors());
 
 // Add specific CORS headers for the upload endpoint
-app.use('/api/upload-to-created-folder', (req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:3001','https://ai-recrutier-candidate-fe.vercel.app');
-  res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  next();
-});
+
+const allowedOrigins = [
+  'http://localhost:3001',
+  'https://ai-recruiter-candidate-fe.vercel.app'
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  credentials: true
+  
+};
+
+app.use('/api/upload-to-created-folder', cors(corsOptions));
+
+// app.use('/api/upload-to-created-folder', (req, res, next) => {
+//   res.header('Access-Control-Allow-Origin', 'http://localhost:3001','https://ai-recrutier-candidate-fe.vercel.app');
+//   res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+//   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+//   res.header('Access-Control-Allow-Credentials', 'true');
+//   next();
+// });
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
