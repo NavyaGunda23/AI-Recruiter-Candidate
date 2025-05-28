@@ -53,7 +53,7 @@ app.options('*', cors());
 
 // Add specific CORS headers for the upload endpoint
 app.use('/api/upload-to-created-folder', (req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:3001');
+  res.header('Access-Control-Allow-Origin', 'http://localhost:3001','https://ai-recrutier-candidate-fe.vercel.app');
   res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
   res.header('Access-Control-Allow-Credentials', 'true');
