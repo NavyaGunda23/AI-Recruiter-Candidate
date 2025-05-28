@@ -143,80 +143,178 @@ function validateFolderName(folderName) {
 let clients = [];
 
 
-wss.on('connection', async(ws) => {
+// wss.on('connection', async(ws) => {
 
-  try {
-    const response = await axios.get('https://api.airtable.com/v0/app6R5bTSGcKo2gmV/tblon8HRet4lsDOUe', {
-      headers: {
-        Authorization: `Bearer pat3fMqN9X4eRWFmd.b31cffaf020d8e4666de0f657adc110e17127c9c38b093cf69d0996fe8e8dfcc`,
-        // Cookie: "brw=brwiMeamMoDgk2PG7; brwConsent=opt-in; AWSALBTG=6eNqOtl90/Hx3Rtqf+hKPZAjhL4G1y7el1V6H0DcIrCDoXON1Zgo+sTBoxAk0nTKQqrWsPbBoicfljEl2ufTJHsVWqgCBxTqjwKAmiMbCOSD5BOq43jRytIwD91E4WvCZiM7ZalTLVCuUoB/MbbbqKHiOyQe1n5PuJtiF0kho7sTp17qCio=; AWSALBTGCORS=6eNqOtl90/Hx3Rtqf+hKPZAjhL4G1y7el1V6H0DcIrCDoXON1Zgo+sTBoxAk0nTKQqrWsPbBoicfljEl2ufTJHsVWqgCBxTqjwKAmiMbCOSD5BOq43jRytIwD91E4WvCZiM7ZalTLVCuUoB/MbbbqKHiOyQe1n5PuJtiF0kho7sTp17qCio=",
-        'Content-Type': 'application/json',
-      },
-    });
+//   try {
+//     const response = await axios.get('https://api.airtable.com/v0/app6R5bTSGcKo2gmV/tblon8HRet4lsDOUe', {
+//       headers: {
+//         Authorization: `Bearer pat3fMqN9X4eRWFmd.b31cffaf020d8e4666de0f657adc110e17127c9c38b093cf69d0996fe8e8dfcc`,
+//         // Cookie: "brw=brwiMeamMoDgk2PG7; brwConsent=opt-in; AWSALBTG=6eNqOtl90/Hx3Rtqf+hKPZAjhL4G1y7el1V6H0DcIrCDoXON1Zgo+sTBoxAk0nTKQqrWsPbBoicfljEl2ufTJHsVWqgCBxTqjwKAmiMbCOSD5BOq43jRytIwD91E4WvCZiM7ZalTLVCuUoB/MbbbqKHiOyQe1n5PuJtiF0kho7sTp17qCio=; AWSALBTGCORS=6eNqOtl90/Hx3Rtqf+hKPZAjhL4G1y7el1V6H0DcIrCDoXON1Zgo+sTBoxAk0nTKQqrWsPbBoicfljEl2ufTJHsVWqgCBxTqjwKAmiMbCOSD5BOq43jRytIwD91E4WvCZiM7ZalTLVCuUoB/MbbbqKHiOyQe1n5PuJtiF0kho7sTp17qCio=",
+//         'Content-Type': 'application/json',
+//       },
+//     });
 
-    const allRecords = response.data.records;
-    ws.send(JSON.stringify({ type: 'INIT', records: allRecords }));
+//     const allRecords = response.data.records;
+//     ws.send(JSON.stringify({ type: 'INIT', records: allRecords }));
 
-  } catch (error) {
-    console.error('❌ Error sending initial Airtable data:', error);
+//   } catch (error) {
+//     console.error('❌ Error sending initial Airtable data:', error);
+//   }
+
+// });
+
+// async function fetchAirtableData() {
+//   try {
+//     const response = await axios.get(
+//       `https://api.airtable.com/v0/app6R5bTSGcKo2gmV/tblon8HRet4lsDOUe`,
+//       {
+//         headers: {
+//           Authorization: `Bearer pat3fMqN9X4eRWFmd.b31cffaf020d8e4666de0f657adc110e17127c9c38b093cf69d0996fe8e8dfcc`,
+//           // Cookie: "brw=brwiMeamMoDgk2PG7; brwConsent=opt-in; AWSALBTG=6eNqOtl90/Hx3Rtqf+hKPZAjhL4G1y7el1V6H0DcIrCDoXON1Zgo+sTBoxAk0nTKQqrWsPbBoicfljEl2ufTJHsVWqgCBxTqjwKAmiMbCOSD5BOq43jRytIwD91E4WvCZiM7ZalTLVCuUoB/MbbbqKHiOyQe1n5PuJtiF0kho7sTp17qCio=; AWSALBTGCORS=6eNqOtl90/Hx3Rtqf+hKPZAjhL4G1y7el1V6H0DcIrCDoXON1Zgo+sTBoxAk0nTKQqrWsPbBoicfljEl2ufTJHsVWqgCBxTqjwKAmiMbCOSD5BOq43jRytIwD91E4WvCZiM7ZalTLVCuUoB/MbbbqKHiOyQe1n5PuJtiF0kho7sTp17qCio=",
+//           'Content-Type': 'application/json',
+//         },
+//       }
+//     );
+
+//     const records = response.data.records;
+//     latestRecords = records; // Update stored records for new clients
+
+//     const changedRecords = [];
+
+//     records.forEach((record) => {
+//       const prev = lastDataMap.get(record.id);
+//       if (!prev || JSON.stringify(prev.fields) !== JSON.stringify(record.fields)) {
+//         changedRecords.push(record);
+//         lastDataMap.set(record.id, record);
+//       }
+//     });
+
+//     if (changedRecords.length > 0) {
+//       const payload = {
+//         type: 'update',
+//         changed: changedRecords,
+//         all: records,
+//       };
+
+//       broadcast(payload);
+//     }
+//   } catch (error) {
+//     console.error('❌ Error fetching Airtable data:', error.message);
+//   }
+// }
+
+// // Broadcast to all connected clients
+// function broadcast(payload) {
+//   const message = JSON.stringify(payload);
+//   wss.clients.forEach((client) => {
+//     if (client.readyState === WebSocket.OPEN) {
+//       client.send(message);
+//     }
+//   });
+// }
+
+
+// setInterval(fetchAirtableData, 50000);
+
+//new approach 
+
+const airtableTables = [
+  {
+    id: 'tblcdsocb7LuTWZ1B',
+    url: 'https://api.airtable.com/v0/app6R5bTSGcKo2gmV/tblcdsocb7LuTWZ1B',
+    name: 'Phone_call',
+  },
+  {
+    id: 'tblon8HRet4lsDOUe',
+    url: 'https://api.airtable.com/v0/app6R5bTSGcKo2gmV/tblon8HRet4lsDOUe',
+    name: 'Screening',
   }
+];
+// let clients = [];
+const airtableHeaders = {
+  Authorization: `Bearer pat3fMqN9X4eRWFmd.b31cffaf020d8e4666de0f657adc110e17127c9c38b093cf69d0996fe8e8dfcc`,
+  'Content-Type': 'application/json',
+};
 
-});
+// const lastDataMap = new Map();
 
-async function fetchAirtableData() {
-  try {
-    const response = await axios.get(
-      `https://api.airtable.com/v0/app6R5bTSGcKo2gmV/tblon8HRet4lsDOUe`,
-      {
-        headers: {
-          Authorization: `Bearer pat3fMqN9X4eRWFmd.b31cffaf020d8e4666de0f657adc110e17127c9c38b093cf69d0996fe8e8dfcc`,
-          // Cookie: "brw=brwiMeamMoDgk2PG7; brwConsent=opt-in; AWSALBTG=6eNqOtl90/Hx3Rtqf+hKPZAjhL4G1y7el1V6H0DcIrCDoXON1Zgo+sTBoxAk0nTKQqrWsPbBoicfljEl2ufTJHsVWqgCBxTqjwKAmiMbCOSD5BOq43jRytIwD91E4WvCZiM7ZalTLVCuUoB/MbbbqKHiOyQe1n5PuJtiF0kho7sTp17qCio=; AWSALBTGCORS=6eNqOtl90/Hx3Rtqf+hKPZAjhL4G1y7el1V6H0DcIrCDoXON1Zgo+sTBoxAk0nTKQqrWsPbBoicfljEl2ufTJHsVWqgCBxTqjwKAmiMbCOSD5BOq43jRytIwD91E4WvCZiM7ZalTLVCuUoB/MbbbqKHiOyQe1n5PuJtiF0kho7sTp17qCio=",
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-
-    const records = response.data.records;
-    latestRecords = records; // Update stored records for new clients
-
-    const changedRecords = [];
-
-    records.forEach((record) => {
-      const prev = lastDataMap.get(record.id);
-      if (!prev || JSON.stringify(prev.fields) !== JSON.stringify(record.fields)) {
-        changedRecords.push(record);
-        lastDataMap.set(record.id, record);
-      }
-    });
-
-    if (changedRecords.length > 0) {
-      const payload = {
-        type: 'update',
-        changed: changedRecords,
-        all: records,
-      };
-
-      broadcast(payload);
-    }
-  } catch (error) {
-    console.error('❌ Error fetching Airtable data:', error.message);
-  }
-}
-
-// Broadcast to all connected clients
 function broadcast(payload) {
-  const message = JSON.stringify(payload);
+  const msg = JSON.stringify(payload);
   wss.clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
-      client.send(message);
+      client.send(msg);
     }
   });
 }
 
+async function fetchTableData(table) {
+  try {
+    const response = await axios.get(table.url, { headers: airtableHeaders });
+    const records = response.data.records;
 
-setInterval(fetchAirtableData, 50000);
+    const changed = [];
 
+    for (const record of records) {
+      const key = `${table.id}:${record.id}`;
+      const prev = lastDataMap.get(key);
 
+      if (!prev || JSON.stringify(prev.fields) !== JSON.stringify(record.fields)) {
+        changed.push(record);
+        lastDataMap.set(key, record);
+      }
+    }
+
+    return { changed, all: records };
+  } catch (err) {
+    console.error(`❌ Failed to poll ${table.name}:`, err.response?.status || err.message);
+    return { changed: [], all: [] };
+  }
+}
+
+async function pollAllTables() {
+  for (const table of airtableTables) {
+    const { changed, all } = await fetchTableData(table);
+    if (changed.length > 0) {
+      broadcast({
+        type: 'update',
+        tableName: table.name,
+        tableId: table.id,
+        changed,
+        all,
+      });
+    }
+  }
+}
+
+// WebSocket connection
+wss.on('connection', async (ws) => {
+  console.log('🔌 Client connected');
+
+  try {
+    for (const table of airtableTables) {
+      const response = await axios.get(table.url, { headers: airtableHeaders });
+      const records = response.data.records;
+
+      records.forEach((record) => {
+        const key = `${table.id}:${record.id}`;
+        lastDataMap.set(key, record);
+      });
+
+      ws.send(
+        JSON.stringify({
+          type: 'INIT',
+          tableName: table.name,
+          tableId: table.id,
+          records,
+        })
+      );
+    }
+  } catch (err) {
+    console.error('❌ Error on init:', err.message);
+  }
+});
+
+setInterval(pollAllTables, 5000); // Poll every 5 seconds
 
 
 app.post('/api/create-folder', async (req, res) => {
